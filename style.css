@@ -32,13 +32,36 @@ a:hover { text-decoration: none; }
   box-shadow: 0 1px 3px rgba(20, 30, 50, .08), 0 8px 24px rgba(20, 30, 50, .06);
   border-radius: 6px;
   overflow: hidden;
+  overflow: clip; /* clips like hidden but still lets the name bar stick */
 }
 
 /* ---------- Header ---------- */
-.masthead {
-  padding: 44px 56px 36px;
-  border-bottom: 1px solid var(--rule);
+.masthead { display: contents; } /* lets the name bar stick to the whole sheet */
+
+/* Name bar stays pinned at the top while the rest of the page scrolls under it */
+.nameplate {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 28px 56px 14px;
+  background: var(--paper);
   border-top: 6px solid var(--accent);
+  transition: box-shadow .2s ease;
+}
+/* Frosted glass: content scrolling underneath shows through, blurred */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nameplate {
+    background: rgba(255, 255, 255, .2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+  }
+}
+.nameplate.stuck {
+  box-shadow: 0 1px 0 var(--rule), 0 6px 16px rgba(20, 30, 50, .08);
+}
+.intro {
+  padding: 0 56px 36px;
+  border-bottom: 1px solid var(--rule);
 }
 .masthead h1 {
   margin: 0;
@@ -46,7 +69,7 @@ a:hover { text-decoration: none; }
   letter-spacing: -.01em;
 }
 .masthead .headline {
-  margin: 8px 0 14px;
+  margin: 0 0 14px;
   font-size: 1.15rem;
   color: var(--muted);
 }
@@ -251,7 +274,8 @@ footer {
   .sheet { margin: 0; border-radius: 0; box-shadow: none; }
   .layout { grid-template-columns: 1fr; }
   aside { border-left: 0; border-top: 1px solid var(--rule); }
-  .masthead, main, aside, footer { padding-left: 24px; padding-right: 24px; }
+  .nameplate, .intro, main, aside, footer { padding-left: 24px; padding-right: 24px; }
+  .nameplate { padding-top: 20px; padding-bottom: 10px; }
   .masthead h1 { font-size: 2.1rem; }
 }
 
@@ -259,6 +283,7 @@ footer {
 @media print {
   body { background: #fff; font-size: 11pt; }
   .sheet { margin: 0; box-shadow: none; max-width: none; }
+  .nameplate { position: static; box-shadow: none; }
   .toggle-all, details.more > summary, footer { display: none; }
   .full { background: none; padding: 4px 0 0; }
   .company { break-inside: avoid-page; }
