@@ -26,8 +26,8 @@ a { color: var(--accent); }
 a:hover { text-decoration: none; }
 
 .sheet {
-  max-width: 1040px;
-  margin: 40px auto;
+  /* Fill the browser width, keeping a small gutter so the card still reads as a sheet */
+  margin: 32px clamp(16px, 3vw, 40px);
   background: var(--paper);
   box-shadow: 0 1px 3px rgba(20, 30, 50, .08), 0 8px 24px rgba(20, 30, 50, .06);
   border-radius: 6px;
@@ -87,7 +87,8 @@ a:hover { text-decoration: none; }
 /* ---------- Layout ---------- */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  /* Jobs column takes all remaining width; sidebar grows a little on wide screens */
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 22vw, 360px);
 }
 main { padding: 36px 48px 48px 56px; }
 aside {
