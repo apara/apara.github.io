@@ -48,6 +48,18 @@ a:hover { text-decoration: none; }
   border-top: 6px solid var(--accent);
   transition: box-shadow .2s ease;
 }
+/* Name with email beside it; email wraps under the name on narrow screens */
+.nameplate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+}
+.nameplate .email {
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+.nameplate .email:hover { text-decoration: underline; }
 /* Frosted glass: content scrolling underneath shows through, blurred */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .nameplate {
