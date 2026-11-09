@@ -107,14 +107,37 @@ section + section { margin-top: 40px; }
   border-top: 1px solid var(--rule);
 }
 .company:first-of-type { border-top: 0; padding-top: 4px; }
-.company > header { margin-bottom: 4px; }
+.company > header { margin-bottom: 2px; }
+
+/* Title/company on the left, dates on the right of the same line */
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  flex-wrap: wrap;
+}
+.dates {
+  font-size: .86rem;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+.title .sep, .role h4 .sep { color: var(--faint); margin: 0 6px; font-weight: 400; }
+.title .loc, .role h4 .loc { font-weight: 400; font-size: .88rem; color: var(--muted); }
+
 .company h3 {
   margin: 0;
   font: 600 1.3rem/1.3 var(--serif);
 }
-.company .tenure { font-size: .88rem; color: var(--faint); }
 
-.role { margin-top: 14px; }
+.role { margin-top: 12px; }
+.company:not(.multi) .role { margin-top: 2px; }
 .company.multi .role {
   position: relative;
   padding-left: 20px;
@@ -141,12 +164,12 @@ section + section { margin-top: 40px; }
   font: 600 1.02rem/1.4 var(--sans);
 }
 .meta {
-  margin: 2px 0 6px;
+  margin: 0 0 4px;
   font-size: .88rem;
   color: var(--muted);
 }
 .meta .sep { color: var(--faint); margin: 0 6px; }
-.blurb { margin: 0; }
+.blurb { margin: 2px 0 0; }
 
 /* Expandable full description */
 details.more { margin-top: 6px; }
