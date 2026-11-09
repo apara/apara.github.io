@@ -14,12 +14,14 @@
 <div class="sheet">
 
   <header class="masthead">
-    <h1>Alexander Paransky</h1>
+    <div class="nameplate"><h1>Alexander Paransky</h1></div>
+    <div class="intro">
     <p class="headline">Engineering leader, innovator and problem solver</p>
     <ul class="contact">
       <li>La Crescenta, California</li>
       <li><a href="https://www.linkedin.com/in/alexparansky">linkedin.com/in/alexparansky</a></li>
     </ul>
+    </div>
   </header>
 
   <div class="layout">
@@ -621,6 +623,19 @@
       items.forEach(function (d, i) { d.open = before[i]; });
       sync();
     });
+  })();
+
+  // Add a soft shadow under the pinned name once content starts scrolling beneath it.
+  (function () {
+    var plate = document.querySelector('.nameplate');
+    if (!plate || !('IntersectionObserver' in window)) return;
+    var sentinel = document.createElement('div');
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = 'height:1px;margin-bottom:-1px';
+    plate.parentNode.insertBefore(sentinel, plate);
+    new IntersectionObserver(function (entries) {
+      plate.classList.toggle('stuck', !entries[0].isIntersecting);
+    }).observe(sentinel);
   })();
 </script>
 </body>
