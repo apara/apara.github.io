@@ -44,8 +44,8 @@ a:hover { text-decoration: none; }
   top: 0;
   z-index: 10;
   padding: 28px 56px 14px;
-  background: var(--paper);
-  border-top: 6px solid var(--accent);
+  background: #ece4f8;
+  border-top: 6px solid #6a3fa0;
   transition: box-shadow .2s ease;
 }
 /* Name with email beside it; email wraps under the name on narrow screens */
@@ -57,13 +57,14 @@ a:hover { text-decoration: none; }
 }
 .nameplate .email {
   font-size: 1.05rem;
+  color: #5b2e91;
   text-decoration: none;
 }
 .nameplate .email:hover { text-decoration: underline; }
 /* Frosted glass: content scrolling underneath shows through, blurred */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .nameplate {
-    background: rgba(255, 255, 255, .75);
+    background: rgba(236, 228, 248, .85);
     -webkit-backdrop-filter: blur(12px) saturate(1.4);
     backdrop-filter: blur(12px) saturate(1.4);
   }
