@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>Alex Paransky — Engineering Leader</title>
   <meta name="description" content="Alex Paransky — engineering leader with 30+ years building and running software platforms. Director, Technology Operations at OpenTable.">
   <meta property="og:title" content="Alex Paransky — Engineering Leader">
@@ -648,21 +649,31 @@
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var darkMq = window.matchMedia && matchMedia('(prefers-color-scheme: dark)');
+
+    // Dark grays for light mode; light grays for dark mode (where the layer uses screen blending).
+    var LIGHT = { pad: '#4a4f5c', trim: '#3d4250', body: '#5a6070', win: '#c9d3e3', smoke: [110, 120, 130] };
+    var DARK  = { pad: '#b4bac6', trim: '#c3c8d2', body: '#a6adbb', win: '#3a4252', smoke: [200, 205, 215] };
+    var col = LIGHT;
 
     var W, H, R, dpr, padX, padY;
     var alt = 0, target = 0, lastAlt = 0, running = false, t = 0;
     var parts = [];
 
-    // Soft round puff, pre-rendered once and stamped for every smoke particle.
+    // Soft round puff, pre-rendered and stamped for every smoke particle.
     var puff = document.createElement('canvas');
     puff.width = puff.height = 64;
-    (function () {
-      var g = puff.getContext('2d').createRadialGradient(32, 32, 0, 32, 32, 32);
-      g.addColorStop(0, 'rgba(110,110,120,.55)');
-      g.addColorStop(.5, 'rgba(120,120,130,.25)');
-      g.addColorStop(1, 'rgba(130,130,140,0)');
-      var c = puff.getContext('2d'); c.fillStyle = g; c.fillRect(0, 0, 64, 64);
-    })();
+    function palette() {
+      col = darkMq && darkMq.matches ? DARK : LIGHT;
+      var a = col.smoke[0], b = col.smoke[1], c3 = col.smoke[2];
+      var c = puff.getContext('2d');
+      var g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(' + a + ',' + a + ',' + b + ',.55)');
+      g.addColorStop(.5, 'rgba(' + b + ',' + b + ',' + c3 + ',.25)');
+      g.addColorStop(1, 'rgba(' + c3 + ',' + c3 + ',' + c3 + ',0)');
+      c.clearRect(0, 0, 64, 64); c.fillStyle = g; c.fillRect(0, 0, 64, 64);
+    }
+    palette();
 
     function size() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -697,13 +708,13 @@
 
     function drawPad() {
       var w = R * 0.9;
-      ctx.fillStyle = '#4a4f5c';
+      ctx.fillStyle = col.pad;
       ctx.fillRect(padX - w / 2, padY, w, 6);
       ctx.fillRect(padX - w * 0.32, padY + 6, 6, 18);
       ctx.fillRect(padX + w * 0.32 - 6, padY + 6, 6, 18);
       // Launch tower
       var tx = padX - w / 2 - 4, top = padY - R * 1.05, tw = R * 0.14;
-      ctx.strokeStyle = '#4a4f5c'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = col.pad; ctx.lineWidth = 1.5;
       ctx.strokeRect(tx - tw, top, tw, padY - top);
       ctx.beginPath();
       for (var y = top; y < padY - 1; y += tw) {
@@ -728,14 +739,14 @@
         ctx.quadraticCurveTo(cx, base + R * .06 + fl * 1.1, cx + w * .32, base + R * .05);
         ctx.fill();
       }
-      ctx.fillStyle = '#3d4250';
+      ctx.fillStyle = col.trim;
       // Nozzle
       ctx.beginPath();
       ctx.moveTo(cx - w * .22, base); ctx.lineTo(cx + w * .22, base);
       ctx.lineTo(cx + w * .32, base + R * .06); ctx.lineTo(cx - w * .32, base + R * .06);
       ctx.fill();
       // Body
-      ctx.fillStyle = '#5a6070';
+      ctx.fillStyle = col.body;
       ctx.fillRect(cx - w / 2, bodyTop, w, base - bodyTop);
       // Nose cone
       ctx.beginPath();
@@ -744,13 +755,13 @@
       ctx.quadraticCurveTo(cx + w / 2, tip + R * .08, cx + w / 2, bodyTop);
       ctx.fill();
       // Fins
-      ctx.fillStyle = '#3d4250';
+      ctx.fillStyle = col.trim;
       ctx.beginPath();
       ctx.moveTo(cx - w / 2, base - R * .2); ctx.lineTo(cx - w * 1.05, base + R * .02); ctx.lineTo(cx - w / 2, base);
       ctx.moveTo(cx + w / 2, base - R * .2); ctx.lineTo(cx + w * 1.05, base + R * .02); ctx.lineTo(cx + w / 2, base);
       ctx.fill();
       // Window
-      ctx.fillStyle = '#c9d3e3';
+      ctx.fillStyle = col.win;
       ctx.beginPath(); ctx.arc(cx, base - R * .55, w * .2, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -793,6 +804,11 @@
 
     size(); readScroll(); alt = lastAlt = target;
     addEventListener('scroll', kick, { passive: true });
+    if (darkMq) {
+      var onScheme = function () { palette(); kick(); };
+      if (darkMq.addEventListener) darkMq.addEventListener('change', onScheme);
+      else if (darkMq.addListener) darkMq.addListener(onScheme);
+    }
     addEventListener('resize', function () { size(); readScroll(); alt = lastAlt = target; kick(); });
     kick();
   })();
