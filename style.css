@@ -323,12 +323,24 @@ footer {
   .masthead h1 { font-size: 2.1rem; }
 }
 
+/* ---------- Background rocket (drawn by script) ---------- */
+.rocket-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5; /* over the sheet, under the pinned name bar */
+  pointer-events: none;
+  opacity: .09;
+  mix-blend-mode: multiply; /* reads as a faint watermark; text stays crisp */
+}
+
 /* ---------- Print: everything expanded, no chrome ---------- */
 @media print {
   body { background: #fff; font-size: 11pt; }
   .sheet { margin: 0; box-shadow: none; max-width: none; }
   .nameplate { position: static; box-shadow: none; }
-  .toggle-all, details.more > summary, footer { display: none; }
+  .toggle-all, details.more > summary, footer, .rocket-layer { display: none; }
   .full { background: none; padding: 4px 0 0; }
   .company { break-inside: avoid-page; }
   a { color: inherit; text-decoration: none; }

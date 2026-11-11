@@ -637,6 +637,165 @@
       plate.classList.toggle('stuck', !entries[0].isIntersecting);
     }).observe(sentinel);
   })();
+
+  // Background rocket: sits on its pad at the top of the page and lifts off as the
+  // viewer scrolls down, trailing smoke; scrolling back up brings it back down.
+  (function () {
+    var canvas = document.createElement('canvas');
+    if (!canvas.getContext) return;
+    canvas.className = 'rocket-layer';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var W, H, R, dpr, padX, padY;
+    var alt = 0, target = 0, lastAlt = 0, running = false, t = 0;
+    var parts = [];
+
+    // Soft round puff, pre-rendered once and stamped for every smoke particle.
+    var puff = document.createElement('canvas');
+    puff.width = puff.height = 64;
+    (function () {
+      var g = puff.getContext('2d').createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(110,110,120,.55)');
+      g.addColorStop(.5, 'rgba(120,120,130,.25)');
+      g.addColorStop(1, 'rgba(130,130,140,0)');
+      var c = puff.getContext('2d'); c.fillStyle = g; c.fillRect(0, 0, 64, 64);
+    })();
+
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = innerWidth; H = innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      R = Math.max(90, Math.min(160, H * 0.2));
+      padX = W * (W < 860 ? 0.82 : 0.86);
+      padY = H - 24;
+    }
+
+    function readScroll() {
+      var max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      var p = Math.min(1, Math.max(0, scrollY / max));
+      target = p * p * (H + R * 2.2); // accelerates like a real launch
+    }
+
+    function emit(n, x, y, nearGround) {
+      for (var i = 0; i < n && parts.length < 500; i++) {
+        var spread = nearGround ? 2.6 : 0.5;
+        parts.push({
+          x: x + (Math.random() - .5) * R * .08,
+          y: y,
+          vx: (Math.random() - .5) * spread * (nearGround ? 1.6 : 1),
+          vy: nearGround ? -Math.random() * .6 : 0.6 + Math.random() * 1.2,
+          r: R * (0.06 + Math.random() * .05),
+          grow: R * (nearGround ? .006 : .004),
+          life: 0,
+          max: 90 + Math.random() * 90
+        });
+      }
+    }
+
+    function drawPad() {
+      var w = R * 0.9;
+      ctx.fillStyle = '#4a4f5c';
+      ctx.fillRect(padX - w / 2, padY, w, 6);
+      ctx.fillRect(padX - w * 0.32, padY + 6, 6, 18);
+      ctx.fillRect(padX + w * 0.32 - 6, padY + 6, 6, 18);
+      // Launch tower
+      var tx = padX - w / 2 - 4, top = padY - R * 1.05, tw = R * 0.14;
+      ctx.strokeStyle = '#4a4f5c'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(tx - tw, top, tw, padY - top);
+      ctx.beginPath();
+      for (var y = top; y < padY - 1; y += tw) {
+        ctx.moveTo(tx - tw, y); ctx.lineTo(tx, y + tw);
+        ctx.moveTo(tx, y); ctx.lineTo(tx - tw, y + tw);
+      }
+      ctx.stroke();
+    }
+
+    function drawRocket(cx, base, thrust) {
+      var w = R * 0.2, bodyTop = base - R * 0.74, tip = base - R;
+      // Flame
+      if (thrust > 0.02) {
+        var fl = R * (0.25 + 0.5 * thrust) * (0.85 + Math.random() * 0.3);
+        var g = ctx.createLinearGradient(0, base, 0, base + R * .06 + fl);
+        g.addColorStop(0, 'rgba(255,240,180,.95)');
+        g.addColorStop(.35, 'rgba(255,150,40,.85)');
+        g.addColorStop(1, 'rgba(255,90,20,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(cx - w * .32, base + R * .05);
+        ctx.quadraticCurveTo(cx, base + R * .06 + fl * 1.1, cx + w * .32, base + R * .05);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#3d4250';
+      // Nozzle
+      ctx.beginPath();
+      ctx.moveTo(cx - w * .22, base); ctx.lineTo(cx + w * .22, base);
+      ctx.lineTo(cx + w * .32, base + R * .06); ctx.lineTo(cx - w * .32, base + R * .06);
+      ctx.fill();
+      // Body
+      ctx.fillStyle = '#5a6070';
+      ctx.fillRect(cx - w / 2, bodyTop, w, base - bodyTop);
+      // Nose cone
+      ctx.beginPath();
+      ctx.moveTo(cx - w / 2, bodyTop);
+      ctx.quadraticCurveTo(cx - w / 2, tip + R * .08, cx, tip);
+      ctx.quadraticCurveTo(cx + w / 2, tip + R * .08, cx + w / 2, bodyTop);
+      ctx.fill();
+      // Fins
+      ctx.fillStyle = '#3d4250';
+      ctx.beginPath();
+      ctx.moveTo(cx - w / 2, base - R * .2); ctx.lineTo(cx - w * 1.05, base + R * .02); ctx.lineTo(cx - w / 2, base);
+      ctx.moveTo(cx + w / 2, base - R * .2); ctx.lineTo(cx + w * 1.05, base + R * .02); ctx.lineTo(cx + w / 2, base);
+      ctx.fill();
+      // Window
+      ctx.fillStyle = '#c9d3e3';
+      ctx.beginPath(); ctx.arc(cx, base - R * .55, w * .2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function frame() {
+      t++;
+      alt += reduce ? (target - alt) : (target - alt) * 0.12;
+      if (Math.abs(target - alt) < 0.3) alt = target;
+      var v = alt - lastAlt; lastAlt = alt;
+
+      var base = padY - R * 0.06 - alt;     // bottom of rocket body
+      var airborne = alt > 1;
+      var thrust = airborne ? Math.min(1, 0.35 + Math.abs(v) / 12) : 0;
+
+      if (!reduce && airborne && base > -R) {
+        var nearGround = alt < R * 1.2;
+        emit(Math.round(2 + thrust * (nearGround ? 10 : 5)), padX, base + R * .08, nearGround);
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var q = parts[i];
+        q.life++; q.x += q.vx; q.y += q.vy; q.vx *= .985; q.vy *= .97; q.vy -= .004; q.r += q.grow;
+        if (q.y > padY - 2 && q.vy > 0) { q.vy *= -.2; q.vx += (Math.random() - .5) * 3; }
+        if (q.life > q.max) { parts.splice(i, 1); continue; }
+        ctx.globalAlpha = 1 - q.life / q.max;
+        ctx.drawImage(puff, q.x - q.r, q.y - q.r, q.r * 2, q.r * 2);
+      }
+      ctx.globalAlpha = 1;
+
+      drawPad();
+      if (base > -R * 1.2) drawRocket(padX, base, thrust);
+
+      if (alt !== target || parts.length) requestAnimationFrame(frame);
+      else running = false;
+    }
+
+    function kick() { readScroll(); if (!running) { running = true; requestAnimationFrame(frame); } }
+
+    size(); readScroll(); alt = lastAlt = target;
+    addEventListener('scroll', kick, { passive: true });
+    addEventListener('resize', function () { size(); readScroll(); alt = lastAlt = target; kick(); });
+    kick();
+  })();
 </script>
 </body>
 </html>
